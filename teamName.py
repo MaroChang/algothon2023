@@ -1,16 +1,36 @@
 #!/usr/bin/env python
-
+                        ###############
+                        #Apply mean reversion strategy
 import numpy as np
 
-nInst=50
+nInst = 50
 currentPos = np.zeros(nInst)
-def getMyPosition (prcSoFar):
+
+def mean_reversion_strategy(price_history, window=50, z_threshold=1.0):
+    mean = price_history[-window:].mean()
+    std = price_history[-window:].std()
+    z_score = (price_history[-1] - mean) / std
+
+    if z_score > z_threshold:
+        return -1  # Short position
+    elif z_score < -z_threshold:
+        return 1   # Long position
+    else:
+        return 0   # No position
+    
+
+def getMyPosition(prcSoFar):
     global currentPos
-    (nins,nt) = prcSoFar.shape
-    if (nt < 2):
+    (nins, nt) = prcSoFar.shape
+
+    if nt < 51:  # Need at least 51 data points to compute 50-day mean reversion
         return np.zeros(nins)
-    lastRet = np.log(prcSoFar[:,-1] / prcSoFar[:,-2])
-    rpos = np.array([int(x) for x in 2000000 * lastRet / prcSoFar[:,-1]])
-    currentPos = np.array([int(x) for x in currentPos+rpos])
+    
+    for inst in range(nins):
+        price_history = prcSoFar[inst, :]
+        currentPos[inst] = mean_reversion_strategy(price_history)
+        
     return currentPos
 
+
+                        
