@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+#from twoSisters import getMyPosition as getPosition
 from teamName import getMyPosition as getPosition
 
 nInst = 0
