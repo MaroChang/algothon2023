@@ -34,24 +34,6 @@
 
 
 #!/usr/bin/env python
-
-import numpy as np
-
-nInst=50
-currentPos = np.zeros(nInst)
-def getMyPosition(prcSoFar):
-    global currentPos
-    (nins,nt) = prcSoFar.shape
-    if (nt < 2):
-        return np.zeros(nins)
-    lastRet = np.log(prcSoFar[:,-1] / prcSoFar[:,-2])
-    rpos = np.array([int(x) for x in 2000000 * lastRet / prcSoFar[:,-1]])
-    currentPos = np.array([int(x) for x in currentPos+rpos])
-    return currentPos
-
-
-
-
                         
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
@@ -77,6 +59,21 @@ def mean_reversion_strategy(price_history, window=lookback, z_threshold=1.0):
         return 1   # Long position
     else:
         return 0   # No position
+    
+def make_decision(price_history):
+    X = generate_features(price_history)
+    y = np.roll(price_history, -1)[:-1]  # shifted price history as target
+    
+    model = RandomForestRegressor(n_estimators=100)
+    model.fit(X[:-1], y[:-1])  # Train using all data points except the last one
+    
+    forecast = model.predict([X[-1]])
+    if forecast > price_history[-1]:  # If forecasted price is higher than the last observed price
+        return 1
+    elif forecast < price_history[-1]:  # If forecasted price is lower than the last observed price
+        return -1
+    
+    return 0
 
 def getMyPosition(prcSoFar):
     global currentPos
@@ -84,26 +81,18 @@ def getMyPosition(prcSoFar):
 
     if nt < 51:  # Need at least 51 data points to compute 50-day mean reversion and generate features
         return np.zeros(nins)
+
+    rpos = np.zeros(nins)
     
     for inst in range(nins):
         price_history = prcSoFar[inst, :]
         decision = mean_reversion_strategy(price_history)
         
         if decision == 0:
-            X = generate_features(price_history)
-            y = np.roll(price_history, -1)[:-1]  # shifted price history as target
-            
-            model = RandomForestRegressor(n_estimators=100)
-            model.fit(X[:-1], y[:-1])  # Train using all data points except the last one
-            
-            forecast = model.predict([X[-1]])
-            if forecast > price_history[-1]:  # If forecasted price is higher than the last observed price
-                currentPos[inst] = 1
-            elif forecast < price_history[-1]:  # If forecasted price is lower than the last observed price
-                currentPos[inst] = -1
-            else:
-                currentPos[inst] = 0
-        else:
-            currentPos[inst] = decision
+            decision = make_decision(price_history)
         
+        #limit $200 for each instrument perday
+        rpos[inst] = decision * 200
+    
+    currentPos = np.array([int(x) for x in currentPos+rpos])
     return currentPos
