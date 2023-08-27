@@ -2,38 +2,45 @@ import numpy as np
 
 nInst = 50
 currentPos = np.zeros(nInst)
+lookback = 20  # Period for the moving average and Fourier Transform
 
-def zscore(series):
-    return (series - series.mean()) / np.std(series)
+def fourier_smooth(prices, num_coeffs=5):
+    """Smooth a price series using Fourier Transform."""
+    # Compute the Fourier Transform
+    coeffs = np.fft.fft(prices)
+    
+    # Set all but the first few coefficients to zero
+    coeffs[num_coeffs:-num_coeffs] = 0
+    
+    # Compute the Inverse Fourier Transform
+    smoothed_prices = np.fft.ifft(coeffs)
+    
+    return smoothed_prices.real  # Return the real part (imaginary part should be negligible)
 
-def pairs_trading_strategy(prices_A, prices_B, window=50, z_threshold=1.0):
-    # Calculate spread and its z-score
-    spread = prices_A - prices_B
-    z_scores = zscore(spread[-window:])
-    current_z_score = z_scores[-1]
-
-    # Trading logic
-    if current_z_score > z_threshold:
-        return -1, 1  # short A, long B
-    elif current_z_score < -z_threshold:
-        return 1, -1  # long A, short B
-    else:
-        return 0, 0  # No position
+def trend_following_strategy(prices):
+    smoothed_prices = fourier_smooth(prices, lookback)
+    
+    # Check the last price against the smoothed series
+    if prices[-1] > smoothed_prices[-1]:  # Price above smoothed series, bullish trend
+        return 1
+    elif prices[-1] < smoothed_prices[-1]:  # Price below smoothed series, bearish trend
+        return -1
+    return 0  # No clear trend
 
 def getMyPosition(prcSoFar):
     global currentPos
     (nins, nt) = prcSoFar.shape
-
-    if nt < 51:  # Need at least 51 data points to compute 50-day mean reversion
+    if nt < lookback:  # Not enough data points to compute the trend
         return np.zeros(nins)
     
-    # Assume asset 0 and asset 1 are our correlated pair (this is just an example)
-    position_A, position_B = pairs_trading_strategy(prcSoFar[0], prcSoFar[1])
-    currentPos[0] = position_A
-    currentPos[1] = position_B
-
-    # Rest of the assets remain neutral
-    for inst in range(2, nins):
-        currentPos[inst] = 0
+    rpos = np.zeros(nins)
+    for inst in range(nins):
+        price_history = prcSoFar[inst, :]
         
+        decision = trend_following_strategy(price_history)
+        
+        # Adjust the position size if needed
+        rpos[inst] = decision * 200  # Adjust this to control the amount invested/shorted
+    
+    currentPos = np.array([int(x) for x in currentPos + rpos])
     return currentPos
