@@ -1,0 +1,4 @@
+Team name:TeamQ
+Team captain name: Quynh Trang Dang
+Email: marochang@gmail.com
+Link to public GitHub repo: https://github.com/MaroChang/algothon2023
