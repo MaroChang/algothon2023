@@ -2,13 +2,18 @@
 
 import numpy as np
 import pandas as pd
-# from teamQ import getMyPosition as getPosition
+import time
+
+#from teamQ import getMyPosition as getPosition
 from TwoSisters import getMyPosition as getPosition
 
 nInst = 0
 nt = 0
 commRate = 0.0010
 dlrPosLimit = 10000
+
+# get the start time
+st = time.time()
 
 def loadPrices(fn):
     global nt, nInst
@@ -74,3 +79,8 @@ print ("totDvolume: %.0lf " % dvol)
 print ("Score: %.2lf" % score)
 
 
+# get the end time
+et = time.time()
+# get the execution time
+elapsed_time = et - st
+print('Execution time:', int(elapsed_time/60), 'min', int(elapsed_time%60) , 'seconds')
