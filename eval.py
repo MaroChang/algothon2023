@@ -2,8 +2,8 @@
 
 import numpy as np
 import pandas as pd
-# from teamQ import getMyPosition as getPosition
-from TwoSisters import getMyPosition as getPosition
+
+from teamQ import getMyPosition as getPosition
 
 nInst = 0
 nt = 0
@@ -32,7 +32,7 @@ def calcPL(prcHist):
     value = 0
     todayPLL = []
     (_,nt) = prcHist.shape
-    for t in range(1,251): 
+    for t in range(1,250): 
         prcHistSoFar = prcHist[:,:t]
         newPosOrig = getPosition(prcHistSoFar)
         curPrices = prcHistSoFar[:,-1] #prcHist[:,t-1]
@@ -72,5 +72,4 @@ print ("StdDev(PL): %.2lf" % plstd)
 print ("annSharpe(PL): %.2lf " % sharpe)
 print ("totDvolume: %.0lf " % dvol)
 print ("Score: %.2lf" % score)
-
 
