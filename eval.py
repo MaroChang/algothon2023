@@ -2,13 +2,18 @@
 
 import numpy as np
 import pandas as pd
+import time
 from teamQ import getMyPosition as getPosition
-# from twoSisters import getMyPosition as getPosition
+#from TwoSisters import getMyPosition as getPosition
+
 
 nInst = 0
 nt = 0
 commRate = 0.0010
 dlrPosLimit = 10000
+
+# get the start time
+st = time.time()
 
 def loadPrices(fn):
     global nt, nInst
@@ -32,7 +37,7 @@ def calcPL(prcHist):
     value = 0
     todayPLL = []
     (_,nt) = prcHist.shape
-    for t in range(1,251): 
+    for t in range(1,250): 
         prcHistSoFar = prcHist[:,:t]
         newPosOrig = getPosition(prcHistSoFar)
         curPrices = prcHistSoFar[:,-1] #prcHist[:,t-1]
@@ -73,4 +78,8 @@ print ("annSharpe(PL): %.2lf " % sharpe)
 print ("totDvolume: %.0lf " % dvol)
 print ("Score: %.2lf" % score)
 
-
+# get the end time
+et = time.time()
+# get the execution time
+elapsed_time = et - st
+print('Execution time:', int(elapsed_time/60), 'min', int(elapsed_time%60) , 'seconds')
