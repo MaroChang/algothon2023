@@ -2,8 +2,8 @@
 
 import numpy as np
 import pandas as pd
-from teamQ import getMyPosition as getPosition
-# from twoSisters import getMyPosition as getPosition
+# from teamQ import getMyPosition as getPosition
+from TwoSisters import getMyPosition as getPosition
 
 nInst = 0
 nt = 0
